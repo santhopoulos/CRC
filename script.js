@@ -125,8 +125,9 @@ const transferChannelBer = function (t) {
   if (!error) {
     return t;
   } else {
-    if (t[0] === '0') return '1' + t.slice(1);
-    else return '0' + t.slice(1);
+    return changeRandomChar(t);
+    // if (t[0] === '0') return '1' + t.slice(1);
+    // else return '0' + t.slice(1);
   }
 };
 
@@ -134,11 +135,18 @@ const changeRandomChar = function (str) {
   const randNumber = Math.round(Math.random() * (str.length - 1));
   const strArr = str.split('');
   strArr[randNumber] = strArr[randNumber] === '0' ? '1' : '0';
+  console.log(`Change at position ${randNumber}`);
   return strArr.join('');
 };
 
 for (let i = 0; i < tArr.length; i++)
-  console.log(tArr[i], transferChannelBer(tArr[i]), changeRandomChar('111000'));
+  console.log(
+    'Before:',
+    tArr[i],
+    'After:',
+    transferChannelBer(tArr[i])
+    //changeRandomChar('111000')
+  );
 /*
  To do:
  1) Create function to check if a message T is transported correctly to the receiver DONE 
