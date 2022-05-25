@@ -3,7 +3,9 @@
 const numberOfBlocks = 10;
 const blockSize = 20; //K
 const divisor = 110101; //P
-const ber = 10 ** -1; //BER
+const ber = 0.33; //BER
+
+const totalErrors = 0;
 
 const xor = function (a, b) {
   let result = '';
@@ -15,7 +17,7 @@ const xor = function (a, b) {
 };
 
 const computeFCS = function (dividend, divisor) {
-  //Adding the necessary Zeros to the dividend before proceeding with the division (T=2^(n-k)D)
+  //Adding the necessary Zeros to the dividend before proceeding with the division (T=2^(n-k)*D)
   const zerosToAppend = divisor.length - 1;
   for (let i = 0; i < zerosToAppend; i++) dividend += '0';
 
@@ -23,54 +25,36 @@ const computeFCS = function (dividend, divisor) {
   console.log(`We  appended: ${zerosToAppend} mhdenika ston diairetaio`);
 
   let pick = divisor.length;
-  console.log(
-    '--------------------------\nBinary division (modulo-2)\n--------------------------'
-  );
+  // console.log(
+  //   '--------------------------\nBinary division (modulo-2)\n--------------------------'
+  // );
 
-  console.log(`Divisor: ${divisor}\nDividend: ${dividend}`);
-  console.log(
-    `Length of the divisor is: ${pick}\nLength of the divvidend is: ${dividend.length}`
-  );
+  // console.log(`Divisor: ${divisor}\nDividend: ${dividend}`);
+  // console.log(
+  //   `Length of the divisor is: ${pick}\nLength of the divvidend is: ${dividend.length}`
+  // );
 
   //Slicing the dividend to appropriate length for particular step
   let tmp = dividend.slice(0, pick);
-
-  let j = 1;
 
   while (pick < dividend.length) {
     if (tmp[0] === '1') {
       tmp = xor(divisor, tmp) + dividend[pick];
       if (tmp[0] === '0') tmp = tmp.slice(1);
-      //console.log(`fc --> tmp: ${tmp}, ${typeof tmp}`);
     } else {
       tmp = tmp.slice(1) + dividend[pick];
-      //tmp = xor('0'.repeat(pick), tmp) + dividend[pick];
-      //console.log(`sc --> tmp: ${tmp}, ${typeof tmp}`);
     }
-    //console.log(`Loop number ${j} ${tmp}`);
-    //console.log('here!');
     pick += 1;
-    j++;
   }
-  //console.log(tmp);
   if (tmp[0] === '1') tmp = xor(divisor, tmp);
-  // } else {
-  //   tmp = xor('0'.repeat(pick), tmp);
-  // }
 
   const res = tmp;
   return res.slice(1);
 };
 
 const remainder5 = computeFCS('1010001101000001', divisor.toString());
-//const remainder = computeFCS('100100000', '1101');
-//const remainder3 = computeFCS('1010001101000001', '110101');
-//const remainder4 = computeFCS('10101001111101', '100101');
-//const remainder6 = computeFCS('10010', '11');
-//const remainder2 = computeFCS('00010100010001111100', '110101');
+
 console.log('Remainder: ', remainder5, typeof remainder5);
-//console.log(xor('1111', '0101'));
-// computeFCS('101110110100000', '110101');
 
 const createBlock = function (k) {
   let block = '';
@@ -103,12 +87,17 @@ for (let i = 0; i < blocksArr.length; i++) {
 console.log(tArr);
 // console.log(typeof tArr[0]);
 
-//Takes message T (block*2n-k + CRC)
+//Parameters: message T (block*2n-k + CRC) and Divisor P
+//Returns: true if remainder is 0 otherwise false
 const checkT = function (t, p) {
   const remainder = computeFCS(t.toString(), p.toString());
   if (parseInt(remainder) === 0) {
     console.log('Finally we did it');
-  } else console.log('wtf');
+    return 1;
+  } else {
+    console.log('wtf');
+    return 0;
+  }
 };
 
 for (let i = 0; i < blocksArr.length; i++) {
@@ -120,25 +109,40 @@ for (let i = 0; i < blocksArr.length; i++) {
 }
 
 for (let i = 0; i < tArr.length; i++) {
-  console.log(i + 1, tArr[i], fcsArr[i], checkT(tArr[i], divisor));
+  console.log(i + 1, tArr[i], fcsArr[i], checkT(tArr[i], divisor), 'here!');
 }
 
 const transferChannelBer = function (t) {
   const berPrecentage = ber * 100;
-  const randomNumber = Math.random() * 100;
+  const randomNumber = Math.round(Math.random() * 100);
   const error = randomNumber <= berPrecentage ? true : false;
 
   console.log(
     `BER Precentage: ${berPrecentage}%\nrandomNumber: ${randomNumber}`
   );
   console.log('Error: ', error);
+
+  if (!error) {
+    return t;
+  } else {
+    if (t[0] === '0') return '1' + t.slice(1);
+    else return '0' + t.slice(1);
+  }
 };
 
-transferChannelBer(10);
+const changeRandomChar = function (str) {
+  const randNumber = Math.round(Math.random() * (str.length - 1));
+  const strArr = str.split('');
+  strArr[randNumber] = strArr[randNumber] === '0' ? '1' : '0';
+  return strArr.join('');
+};
 
+for (let i = 0; i < tArr.length; i++)
+  console.log(tArr[i], transferChannelBer(tArr[i]), changeRandomChar('111000'));
 /*
  To do:
  1) Create function to check if a message T is transported correctly to the receiver DONE 
  2) Refactor Code
- 3) Set Up Github
+ 3) Set Up Github DONE
+ 4) When there is an error make a change to a random letter of the string
 */
