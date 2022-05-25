@@ -1,11 +1,11 @@
 'use strict';
 
-const numberOfBlocks = 10;
+const numberOfBlocks = 100;
 const blockSize = 20; //K
 const divisor = 110101; //P
-const ber = 0.33; //BER
+const ber = 0.1; //BER
 
-const totalErrors = 0;
+let totalErrors = 0;
 
 const xor = function (a, b) {
   let result = '';
@@ -52,9 +52,9 @@ const computeFCS = function (dividend, divisor) {
   return res.slice(1);
 };
 
-const remainder5 = computeFCS('1010001101000001', divisor.toString());
+//const remainder5 = computeFCS('1010001101000001', divisor.toString());
 
-console.log('Remainder: ', remainder5, typeof remainder5);
+//console.log('Remainder: ', remainder5, typeof remainder5);
 
 const createBlock = function (k) {
   let block = '';
@@ -125,6 +125,7 @@ const transferChannelBer = function (t) {
   if (!error) {
     return t;
   } else {
+    totalErrors++;
     return changeRandomChar(t);
     // if (t[0] === '0') return '1' + t.slice(1);
     // else return '0' + t.slice(1);
@@ -147,6 +148,7 @@ for (let i = 0; i < tArr.length; i++)
     transferChannelBer(tArr[i])
     //changeRandomChar('111000')
   );
+console.log(`Total errors: ${totalErrors}`);
 /*
  To do:
  1) Create function to check if a message T is transported correctly to the receiver DONE 
