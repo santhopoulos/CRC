@@ -1,6 +1,6 @@
 'use strict';
 
-const numberOfBlocks = 1000;
+const numberOfBlocks = 10000;
 const blockSize = 20; //K
 const divisor = 110101; //P
 const ber = 10 ** -3; //BER
@@ -25,7 +25,7 @@ const computeFCS = function (dividend, divisor) {
   //Appending the necessary Zeros to the dividend before proceeding with the division (T=2^(n-k)*D)
   const zerosToAppend = divisor.length - 1;
   for (let i = 0; i < zerosToAppend; i++) dividend += '0';
-  //console.log(`We  appended: ${zerosToAppend} mhdenika ston diairetaio`);
+  console.log(`We  appended: ${zerosToAppend} mhdenika ston diairetaio`);
 
   // Number of bits to be XORed at a time.
   let pick = divisor.length;
@@ -48,9 +48,6 @@ const computeFCS = function (dividend, divisor) {
   return res.slice(1);
 };
 
-//const remainder5 = computeFCS('1010001101000001', divisor.toString());
-//console.log('Remainder: ', remainder5, typeof remainder5);
-
 const createBlock = function (k) {
   let block = '';
   for (let i = 0; i < k; i++) {
@@ -72,13 +69,14 @@ const checkT = function (t, p) {
 };
 
 const transferChannelBer = function (t) {
-  const berPrecentage = ber * 100;
-  const randomNumber = Math.round(Math.random() * 100);
-  const error = randomNumber <= berPrecentage ? true : false;
+  const randomNumber = Math.random().toFixed(6);
+  const PEProb = (1 - (1 - ber) ** blockSize).toFixed(6);
+  // const PEProbPrec = (PEProb * 100).toFixed(2);
+  // const randomNumberPrec = (Math.random() * 100).toFixed(2);
+  const error = randomNumber <= PEProb ? true : false;
 
-  console.log(
-    `BER Precentage: ${berPrecentage}%\nrandomNumber: ${randomNumber}`
-  );
+  console.log(`Packet Error Probability: ${PEProb}`);
+  console.log(`randomNumber: ${randomNumber}`);
   console.log('Error: ', error);
 
   if (!error) {
@@ -131,29 +129,30 @@ const tArrBer = [];
 for (let i = 0; i < blocksArr.length; i++) {
   tArrBer.push(transferChannelBer(tArr[i]));
 }
+console.log('tArrBer: ', tArrBer);
 
-for (let i = 0; i < blocksArr.length; i++) {
-  console.log(
-    `${i + 1} D: ${blocksArr[i]} P: ${divisor}  FCS: ${fcsArr[i]}  T: ${
-      tArr[i]
-    }`
-  );
-}
+// for (let i = 0; i < blocksArr.length; i++) {
+//   console.log(
+//     `${i + 1} D: ${blocksArr[i]} P: ${divisor}  FCS: ${fcsArr[i]}  T: ${
+//       tArr[i]
+//     }`
+//   );
+// }
 
 for (let i = 0; i < tArr.length; i++) {
-  console.log(i + 1, tArr[i], fcsArr[i], checkT(tArr[i], divisor), 'here!');
+  console.log(i + 1, tArr[i], fcsArr[i], checkT(tArrBer[i], divisor), 'here!');
 }
 
-for (let i = 0; i < tArr.length; i++)
-  console.log(
-    'Before:',
-    tArr[i],
-    'After:',
-    transferChannelBer(tArr[i]),
-    //checkT(transferChannelBer(tArr[i]), divisor)
-    checkT(tArrBer[i], divisor)
-  );
-console.log(`Total errors: ${totalErrors}`);
+// for (let i = 0; i < tArr.length; i++)
+//   console.log(
+//     'Before:',
+//     tArr[i],
+//     'After:',
+//     transferChannelBer(tArr[i])
+//     //checkT(transferChannelBer(tArr[i]), divisor)
+//     //checkT(tArrBer[i], divisor)
+//   );
+console.log(`Total Packages with errors: ${totalErrors}`);
 printInfoPrecenteges();
 /*
  To do:
