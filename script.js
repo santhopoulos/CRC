@@ -1,9 +1,10 @@
 'use strict';
 
-const numberOfBlocks = 10000;
+const numberOfBlocks = 1000;
 const blockSize = 20; //K
 const divisor = 110101; //P
-const ber = 10 ** -3; //BER
+const BER = 10 ** -3; //BER
+const PER = 1 - (1 - BER) ** blockSize; //PER
 
 let totalErrors = 0;
 
@@ -69,13 +70,13 @@ const checkT = function (t, p) {
 };
 
 const transferChannelBer = function (t) {
-  const randomNumber = Math.random().toFixed(6);
-  const PEProb = (1 - (1 - ber) ** blockSize).toFixed(6);
+  const randomNumber = Math.random();
+  //const PEProb = 1 - (1 - ber) ** blockSize;
   // const PEProbPrec = (PEProb * 100).toFixed(2);
   // const randomNumberPrec = (Math.random() * 100).toFixed(2);
-  const error = randomNumber <= PEProb ? true : false;
+  const error = randomNumber <= PER ? true : false;
 
-  console.log(`Packet Error Probability: ${PEProb}`);
+  console.log(`Packet Error Probability: ${PER}`);
   console.log(`randomNumber: ${randomNumber}`);
   console.log('Error: ', error);
 
