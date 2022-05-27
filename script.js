@@ -1,11 +1,16 @@
 'use strict';
 
-const numberOfBlocks = 100;
+const numberOfBlocks = 1000;
 const blockSize = 20; //K
 const divisor = 110101; //P
-const ber = 0.1; //BER
+const ber = 10 ** -3; //BER
 
 let totalErrors = 0;
+
+//Precentages
+let preErrorMess;
+let preErrorMessDetected;
+let preErrorMessNotDetected;
 
 const xor = function (a, b) {
   let result = '';
@@ -17,22 +22,13 @@ const xor = function (a, b) {
 };
 
 const computeFCS = function (dividend, divisor) {
-  //Adding the necessary Zeros to the dividend before proceeding with the division (T=2^(n-k)*D)
+  //Appending the necessary Zeros to the dividend before proceeding with the division (T=2^(n-k)*D)
   const zerosToAppend = divisor.length - 1;
   for (let i = 0; i < zerosToAppend; i++) dividend += '0';
+  //console.log(`We  appended: ${zerosToAppend} mhdenika ston diairetaio`);
 
   // Number of bits to be XORed at a time.
-  console.log(`We  appended: ${zerosToAppend} mhdenika ston diairetaio`);
-
   let pick = divisor.length;
-  // console.log(
-  //   '--------------------------\nBinary division (modulo-2)\n--------------------------'
-  // );
-
-  // console.log(`Divisor: ${divisor}\nDividend: ${dividend}`);
-  // console.log(
-  //   `Length of the divisor is: ${pick}\nLength of the divvidend is: ${dividend.length}`
-  // );
 
   //Slicing the dividend to appropriate length for particular step
   let tmp = dividend.slice(0, pick);
@@ -53,64 +49,27 @@ const computeFCS = function (dividend, divisor) {
 };
 
 //const remainder5 = computeFCS('1010001101000001', divisor.toString());
-
 //console.log('Remainder: ', remainder5, typeof remainder5);
 
 const createBlock = function (k) {
   let block = '';
   for (let i = 0; i < k; i++) {
-    //console.log(i);
     let randomNumber = Math.random() >= 0.5 ? 1 : 0;
     block += randomNumber;
   }
-  //console.log(block, block.length, typeof block);
   return block;
 };
-
-//console.log(createBlock(10));
-const blocksArr = [];
-for (let i = 0; i < numberOfBlocks; i++) {
-  blocksArr.push(createBlock(blockSize));
-}
-console.log(blocksArr);
-
-const fcsArr = [];
-for (let i = 0; i < blocksArr.length; i++) {
-  fcsArr.push(computeFCS(blocksArr[i].toString(), divisor.toString()));
-}
-console.log(fcsArr);
-
-const tArr = [];
-for (let i = 0; i < blocksArr.length; i++) {
-  tArr.push(blocksArr[i] + fcsArr[i]);
-}
-console.log(tArr);
-// console.log(typeof tArr[0]);
 
 //Parameters: message T (block*2n-k + CRC) and Divisor P
 //Returns: true if remainder is 0 otherwise false
 const checkT = function (t, p) {
   const remainder = computeFCS(t.toString(), p.toString());
   if (parseInt(remainder) === 0) {
-    console.log('Finally we did it');
     return 1;
   } else {
-    console.log('wtf');
     return 0;
   }
 };
-
-for (let i = 0; i < blocksArr.length; i++) {
-  console.log(
-    `${i + 1} D: ${blocksArr[i]} P: ${divisor}  FCS: ${fcsArr[i]}  T: ${
-      tArr[i]
-    }`
-  );
-}
-
-for (let i = 0; i < tArr.length; i++) {
-  console.log(i + 1, tArr[i], fcsArr[i], checkT(tArr[i], divisor), 'here!');
-}
 
 const transferChannelBer = function (t) {
   const berPrecentage = ber * 100;
@@ -140,15 +99,62 @@ const changeRandomChar = function (str) {
   return strArr.join('');
 };
 
+const printInfoPrecenteges = function () {
+  console.log(
+    `Total messages transmitted: ${numberOfBlocks}\nTotal number of messages containing errors: ${totalErrors}\nPrecentage of messages transmitted with errors: ${
+      (totalErrors / numberOfBlocks) * 100
+    }%`
+  );
+};
+
+//Create Blocks array
+const blocksArr = [];
+for (let i = 0; i < numberOfBlocks; i++) {
+  blocksArr.push(createBlock(blockSize));
+}
+// console.log('Blocks Array: ', blocksArr);
+
+//Create FCS array
+const fcsArr = [];
+for (let i = 0; i < blocksArr.length; i++) {
+  fcsArr.push(computeFCS(blocksArr[i].toString(), divisor.toString()));
+}
+// console.log('FCS Array: ', fcsArr);
+
+const tArr = [];
+for (let i = 0; i < blocksArr.length; i++) {
+  tArr.push(blocksArr[i] + fcsArr[i]);
+}
+// console.log('T Array: ', tArr);
+
+const tArrBer = [];
+for (let i = 0; i < blocksArr.length; i++) {
+  tArrBer.push(transferChannelBer(tArr[i]));
+}
+
+for (let i = 0; i < blocksArr.length; i++) {
+  console.log(
+    `${i + 1} D: ${blocksArr[i]} P: ${divisor}  FCS: ${fcsArr[i]}  T: ${
+      tArr[i]
+    }`
+  );
+}
+
+for (let i = 0; i < tArr.length; i++) {
+  console.log(i + 1, tArr[i], fcsArr[i], checkT(tArr[i], divisor), 'here!');
+}
+
 for (let i = 0; i < tArr.length; i++)
   console.log(
     'Before:',
     tArr[i],
     'After:',
-    transferChannelBer(tArr[i])
-    //changeRandomChar('111000')
+    transferChannelBer(tArr[i]),
+    //checkT(transferChannelBer(tArr[i]), divisor)
+    checkT(tArrBer[i], divisor)
   );
 console.log(`Total errors: ${totalErrors}`);
+printInfoPrecenteges();
 /*
  To do:
  1) Create function to check if a message T is transported correctly to the receiver DONE 
@@ -156,3 +162,8 @@ console.log(`Total errors: ${totalErrors}`);
  3) Set Up Github DONE
  4) When there is an error make a change to a random letter of the string
 */
+
+//Prwta tranfer through ber channel then --> checkT
+//Afou exw to tArr to pairnaw olo mesa apo to berChannel kai ftiaxnw enan neo pinaka
+
+//To ber anaferetai se ena minima T
