@@ -3,10 +3,11 @@
 const numberOfBlocks = 1000;
 const blockSize = 20; //K
 const divisor = 110101; //P
-const BER = 10 ** -3; //BER
-const PER = 1 - (1 - BER) ** blockSize; //PER
+const BER = 10 ** -3; //BER (Bit error rate)
+const PER = 1 - (1 - BER) ** blockSize; //PER (Package error rate)
 
 let totalErrors = 0;
+// let errorsDetected = 0;
 
 //Precentages
 let preErrorMess;
@@ -69,22 +70,29 @@ const checkT = function (t, p) {
   }
 };
 
-const transferChannelBer = function (t) {
+const transferMessageChannelBer = function (t) {
   const randomNumber = Math.random();
   //const PEProb = 1 - (1 - ber) ** blockSize;
   // const PEProbPrec = (PEProb * 100).toFixed(2);
   // const randomNumberPrec = (Math.random() * 100).toFixed(2);
   const error = randomNumber <= PER ? true : false;
 
-  console.log(`Packet Error Probability: ${PER}`);
-  console.log(`randomNumber: ${randomNumber}`);
-  console.log('Error: ', error);
+  // console.log(`Packet Error Probability: ${PER}`);
+  // console.log(`randomNumber: ${randomNumber}`);
+  // console.log('Error: ', error);
 
   if (!error) {
     return t;
   } else {
     totalErrors++;
-    return changeRandomChar(t);
+    const tError = changeRandomChar(t);
+    console.log(
+      'Error found!\nOriginal message T:',
+      t,
+      '\nT with error: ',
+      tError
+    );
+    return tError;
     // if (t[0] === '0') return '1' + t.slice(1);
     // else return '0' + t.slice(1);
   }
@@ -98,11 +106,25 @@ const changeRandomChar = function (str) {
   return strArr.join('');
 };
 
+const detectTotalErros = function (arr) {
+  let errorsDetected = 0;
+  for (let i = 0; i < arr.length; i++) {
+    if (checkT(arr[i], divisor) !== 1) errorsDetected++;
+  }
+  return errorsDetected;
+};
+
 const printInfoPrecenteges = function () {
+  //Computing the Precentages for Messages containing errors,
+  preErrorMess = (totalErrors / numberOfBlocks) * 100;
+  preErrorMessDetected = (detectTotalErros(tArrBer) / totalErrors) * 100;
+  preErrorMessNotDetected = 100 - preErrorMessDetected;
   console.log(
-    `Total messages transmitted: ${numberOfBlocks}\nTotal number of messages containing errors: ${totalErrors}\nPrecentage of messages transmitted with errors: ${
-      (totalErrors / numberOfBlocks) * 100
-    }%`
+    `Total messages transmitted: ${numberOfBlocks}\nTotal number of messages containing errors: ${totalErrors}\nPrecentage of messages transmitted with errors: ${preErrorMess}%`
+  );
+  console.log(`Detected Errors Precentage: ${preErrorMessDetected}%`);
+  console.log(
+    `Precentage of undetected message with error/errors: ${preErrorMessNotDetected}%`
   );
 };
 
@@ -128,9 +150,9 @@ for (let i = 0; i < blocksArr.length; i++) {
 
 const tArrBer = [];
 for (let i = 0; i < blocksArr.length; i++) {
-  tArrBer.push(transferChannelBer(tArr[i]));
+  tArrBer.push(transferMessageChannelBer(tArr[i]));
 }
-console.log('tArrBer: ', tArrBer);
+// console.log('tArrBer: ', tArrBer);
 
 // for (let i = 0; i < blocksArr.length; i++) {
 //   console.log(
@@ -140,9 +162,9 @@ console.log('tArrBer: ', tArrBer);
 //   );
 // }
 
-for (let i = 0; i < tArr.length; i++) {
-  console.log(i + 1, tArr[i], fcsArr[i], checkT(tArrBer[i], divisor), 'here!');
-}
+// for (let i = 0; i < tArr.length; i++) {
+//   console.log(i + 1, tArr[i], fcsArr[i], checkT(tArrBer[i], divisor), 'here!');
+// }
 
 // for (let i = 0; i < tArr.length; i++)
 //   console.log(
@@ -153,8 +175,10 @@ for (let i = 0; i < tArr.length; i++) {
 //     //checkT(transferChannelBer(tArr[i]), divisor)
 //     //checkT(tArrBer[i], divisor)
 //   );
-console.log(`Total Packages with errors: ${totalErrors}`);
+console.log(`Total Packages with error/errors: ${totalErrors}`);
 printInfoPrecenteges();
+
+console.log(detectTotalErros(tArrBer));
 /*
  To do:
  1) Create function to check if a message T is transported correctly to the receiver DONE 
@@ -166,4 +190,5 @@ printInfoPrecenteges();
 //Prwta tranfer through ber channel then --> checkT
 //Afou exw to tArr to pairnaw olo mesa apo to berChannel kai ftiaxnw enan neo pinaka
 
-//To ber anaferetai se ena minima T
+//To ber anaferetai se ena bit
+//to per anaferetai se ena block minimatwn T
