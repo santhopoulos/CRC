@@ -1,6 +1,6 @@
 'use strict';
 
-const numberOfBlocks = 1000;
+const numberOfBlocks = 10000;
 const blockSize = 20; //K
 const divisor = 110101; //P
 const BER = 10 ** -3; //BER (Bit error rate)
@@ -10,9 +10,9 @@ let totalErrors = 0;
 // let errorsDetected = 0;
 
 //Precentages
-let preErrorMess;
-let preErrorMessDetected;
-let preErrorMessNotDetected;
+let preErrorMess; //Precentage of messages transmitted with error/errors
+let preErrorMessDetected; //Precentage of detected messages containing error/errors
+let preErrorMessNotDetected; //Precentage of undetected messages containing error/errors
 
 const xor = function (a, b) {
   let result = '';
@@ -24,10 +24,9 @@ const xor = function (a, b) {
 };
 
 const computeFCS = function (dividend, divisor) {
-  //Appending the necessary Zeros to the dividend before proceeding with the division (T=2^(n-k)*D)
+  //Appending the necessary Zeros to the dividend
   const zerosToAppend = divisor.length - 1;
   for (let i = 0; i < zerosToAppend; i++) dividend += '0';
-  console.log(`We  appended: ${zerosToAppend} mhdenika ston diairetaio`);
 
   // Number of bits to be XORed at a time.
   let pick = divisor.length;
@@ -46,11 +45,12 @@ const computeFCS = function (dividend, divisor) {
   }
   if (tmp[0] === '1') tmp = xor(divisor, tmp);
 
-  const res = tmp;
-  return res.slice(1);
+  return tmp.slice(1);
 };
 
+//creates a Block of k bits with each bit having equal possibility to be 1 or 0
 const createBlock = function (k) {
+  console.log('Blocks created');
   let block = '';
   for (let i = 0; i < k; i++) {
     let randomNumber = Math.random() >= 0.5 ? 1 : 0;
@@ -70,39 +70,32 @@ const checkT = function (t, p) {
   }
 };
 
+//Method to transfer the message through BER channel
 const transferMessageChannelBer = function (t) {
   const randomNumber = Math.random();
-  //const PEProb = 1 - (1 - ber) ** blockSize;
-  // const PEProbPrec = (PEProb * 100).toFixed(2);
-  // const randomNumberPrec = (Math.random() * 100).toFixed(2);
   const error = randomNumber <= PER ? true : false;
-
-  // console.log(`Packet Error Probability: ${PER}`);
-  // console.log(`randomNumber: ${randomNumber}`);
-  // console.log('Error: ', error);
 
   if (!error) {
     return t;
   } else {
     totalErrors++;
     const tError = changeRandomChar(t);
-    console.log(
-      'Error found!\nOriginal message T:',
-      t,
-      '\nT with error: ',
-      tError
-    );
+    // console.log(
+    //   'Error found!\nOriginal message T:',
+    //   t,
+    //   '\nT with error: ',
+    //   tError
+    // );
     return tError;
-    // if (t[0] === '0') return '1' + t.slice(1);
-    // else return '0' + t.slice(1);
   }
 };
 
+//Accepts a string as a parameter and returns it with a randomly changed char
 const changeRandomChar = function (str) {
   const randNumber = Math.round(Math.random() * (str.length - 1));
   const strArr = str.split('');
   strArr[randNumber] = strArr[randNumber] === '0' ? '1' : '0';
-  console.log(`Change at position ${randNumber}`);
+  // console.log(`Change at position ${randNumber}`);
   return strArr.join('');
 };
 
@@ -114,15 +107,16 @@ const detectTotalErros = function (arr) {
   return errorsDetected;
 };
 
-const printInfoPrecenteges = function () {
-  //Computing the Precentages for Messages containing errors,
+const printPrecenteges = function () {
   preErrorMess = (totalErrors / numberOfBlocks) * 100;
   preErrorMessDetected = (detectTotalErros(tArrBer) / totalErrors) * 100;
   preErrorMessNotDetected = 100 - preErrorMessDetected;
   console.log(
-    `Total messages transmitted: ${numberOfBlocks}\nTotal number of messages containing errors: ${totalErrors}\nPrecentage of messages transmitted with errors: ${preErrorMess}%`
+    `Total messages transmitted: ${numberOfBlocks}\nTotal number of messages containing errors: ${totalErrors}\nPrecentage of messages transmitted with errors: ${preErrorMess.toFixed(
+      2
+    )}%  `
   );
-  console.log(`Detected Errors Precentage: ${preErrorMessDetected}%`);
+  console.log(`Detected Errors Precentage: ${preErrorMessDetected}%  `);
   console.log(
     `Precentage of undetected message with error/errors: ${preErrorMessNotDetected}%`
   );
@@ -175,20 +169,5 @@ for (let i = 0; i < blocksArr.length; i++) {
 //     //checkT(transferChannelBer(tArr[i]), divisor)
 //     //checkT(tArrBer[i], divisor)
 //   );
-console.log(`Total Packages with error/errors: ${totalErrors}`);
-printInfoPrecenteges();
 
-console.log(detectTotalErros(tArrBer));
-/*
- To do:
- 1) Create function to check if a message T is transported correctly to the receiver DONE 
- 2) Refactor Code
- 3) Set Up Github DONE
- 4) When there is an error make a change to a random letter of the string
-*/
-
-//Prwta tranfer through ber channel then --> checkT
-//Afou exw to tArr to pairnaw olo mesa apo to berChannel kai ftiaxnw enan neo pinaka
-
-//To ber anaferetai se ena bit
-//to per anaferetai se ena block minimatwn T
+printPrecenteges();
